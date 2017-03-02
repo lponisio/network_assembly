@@ -1,0 +1,131 @@
+## zscores are calculated including the true metric
+
+## includes three methods for modularity computation, hierarchical
+## clustering (edge.betweenness.community), dynamic algorithum
+## (walktrap.community) and a greedy algorithum (fastgreedy.community)
+
+# no longer calculate shannon div or evenness
+
+##given inpute matrix (`data') returns desired summary statistics
+calc.metric <- function(data) {
+  
+  ## calculates modularity using edge-betweenness
+  calc.mod <- function(data){ 
+    ## converts a p-a matrix to a graph for modularity computation 
+    mut.adj <- function(x) {
+      nr <- dim(x)[1]
+      nc <- dim(x)[2]
+      to.fill <- matrix(0,ncol=nc + nr, nrow=nc + nr)
+      to.fill[1:nr,(nr+1):(nc+nr)] <- x
+      adj.mat <- graph.adjacency(to.fill, mode= "upper", weighted=TRUE)
+      return(adj.mat)
+    }
+    graph <- mut.adj(data)
+    weights <- as.vector(data)
+    weights <- weights[weights != 0]
+
+    greedy <- modularity(graph, membership(fastgreedy.community(graph,
+    weights=weights)), weights=weights)
+    
+    random.walk <-  modularity(graph, membership(walktrap.community(graph,
+                               weights=weights)), weights=weights)
+    dendro <-  modularity(graph,
+    membership(edge.betweenness.community(graph, weights=weights)),
+    weights=weights)
+   
+    return(c(greedy, random.walk, dendro))
+  }
+  data <- as.matrix(empty(data))
+  network.met <- c("weighted NODF", "H2")
+   # matrix of all 1s or 0s return 0
+  if(all(data == 1) | all(data == 0) | min(data) == max(data)){
+    return(c(mets=rep(0, length(network.met)),
+             mod.met=rep(0,3)))
+    ## matrix of all the same numbers
+  }else if(min(data[data !=0]) == max(data[data !=0])){
+    nodf <- nestednodf(data, weighted=FALSE)$statistic["NODF"]
+    mets <- c(nodf,
+              try(networklevel(data, index=network.met[-1],
+                               H2_integer=FALSE), silent=TRUE))
+  }else{ # weighted matrix
+    mets <- try(networklevel(data, index=network.met,
+                             H2_integer=FALSE), silent=TRUE)}
+  if(inherits(mets, "try-error")){
+    mets <- rep(NA, length(network.met))
+  }
+  mod.met <- calc.mod(data)
+  return(c(mets, mod.met= mod.met))
+}
+
+
+## function to simulate 1 null, and calculate statistics on it
+null.stat <- function(prob, fill, nr, nc) {
+
+  prob.null2 <- function(probs, fill, nrow, ncol) {
+    interact <- rmultinom(1, fill, probs)[,1]
+
+    return(matrix(interact, nrow= nrow, ncol= ncol))
+  }
+  
+  ## simulate null web, previous versions used r2dtable or vaznull.fast
+
+  sim.web <- prob.null2(prob, fill, nr, nc)  
+  
+  ## following line is only necessary when using a null model that
+  ## does not constraint marginals, i.e. prob.null2
+  
+  while(any(dim(sim.web) < 5) | is.matrix(sim.web) == FALSE)
+    sim.web <- prob.null2(prob, fill, nr, nc) 
+  return(calc.metric(sim.web))
+}
+
+##  function that computes summary statistics on simulated null matrices
+##  (nulls simulated from web N times)
+
+network.metrics <- function (data, N) {
+  ## calculate pvalues
+  pvals <- function(stats, nnull){
+    rowSums(stats[,-1] >= stats[,rep(1, ncol(stats) -1)])/(nnull + 1)
+  }
+  ## calculate zvalues two different ways
+  zvals <-function(stats){
+    z.sd <- (stats[,1] -
+             apply(stats, 1, mean, na.rm = TRUE))/
+               apply(stats, 1, sd, na.rm = TRUE)
+    z.sd[is.infinite(z.sd)] <- NA
+    z.mean <- (stats[,1] -
+               apply(stats, 1, mean, na.rm = TRUE))/
+                 apply(stats, 1, mean, na.rm = TRUE)
+    z.mean[is.infinite(z.mean)] <- NA
+    return(cbind(z.sd, z.mean))
+  }
+  ## check that matrix is proper format (no empty row/col and no NAs)
+  if(any(data != 0) & sum(data =! 0) & all(is.na(data) == FALSE)) {
+    ## drop empty rows and columns
+    data <- as.matrix(empty(data))
+    ## check to make sure emptied matrix is large enough
+    ## to calculate statistics on
+    if(is.matrix(data)){
+      if(all(dim(data) >= 5)) {
+        ##  produce N sets of statistics form N different nulls
+        ##  should return matrix that is 5 row by N col
+        row.prob <- rowSums(data)
+        col.prob <- colSums(data)
+        data.prob <- expand.grid(row.prob,col.prob)
+        data.prob <- data.prob[,1]*data.prob[,2]
+        data.fill <- sum(data)
+        ## calculate null metrics
+        null.stat <- replicate(N, null.stat(data.prob, data.fill, 
+                                            nrow(data),ncol(data)),
+                               simplify=TRUE)  
+        true.stat <- calc.metric(data) ## calculate metrics from data
+        out.mets <- cbind(true.stat, null.stat)
+        zvalues <- zvals(out.mets) ## compute z scores
+        pvalues <- pvals(out.mets, N)  ## compute p-values
+        return(cbind(true.stat, zvalues, pvalues))
+      }
+    }
+  }
+  blank <- matrix(rep(NA,5*4), ncol=4)
+  return(blank) 
+}
