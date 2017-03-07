@@ -1,5 +1,5 @@
 
-character.evo <- function(tree1, tree2, sigma){
+character.evo <- function(tree1, tree2, sigma, alpha=1){
     ## simulate character evolution
     ## function takes two trees, and the variance of brownian motion
     tree1.trait1 <- rTraitCont(tree1, model='BM', sigma=sigma)
@@ -22,7 +22,7 @@ character.evo <- function(tree1, tree2, sigma){
         optima.tree2 <- gen.optima()
         optima.tree2 <- optima.tree2[tree2$edge[,2]]
         tree2.trait2 <- rTraitCont(tree2, model='OU',
-                                   theta=optima.tree2)
+                                   theta=optima.tree2, alpha=alpha)
         return(tree2.trait2)
     }
     tree2.trait2 <- ou.traits(tree1.trait1, tree2)
@@ -65,6 +65,7 @@ make.pa.mat <- function(prms, traits){
         cbind((trait - abs(trait*prms$range.size)),
         (trait + abs(trait*prms$range.size)))
     }
+    browser()
     ranges <- lapply(traits, calc.range)
     plants  <- ranges[[1]][prms$combinations[,1],]
     animals <- ranges[[2]][prms$combinations[,2],]
