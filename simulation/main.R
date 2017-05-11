@@ -46,7 +46,7 @@ for(i in BM){
                              lambda= lambda,
                              range.size= seq(0.1, 1, length=5),
                              rep=1:nreps)
-
+        dir.create(file.path(sim.dir, type), showWarnings = FALSE)
         mclapply(1:nrow(cases), run.sim,
                  prms= prms,
                  save.path=file.path(sim.dir, type),
@@ -57,13 +57,12 @@ for(i in BM){
 }
 
 
-## laod and make use-able for analysis all the different combinations
+## plot (figure code not on gihub at the moment)
 combins <- c("BMLowDeep", "BMHighDeep", "BMLowShallow",
              "BMHighShallow")
 
 for(i in 1:length(combins)){
     type <- combins[i]
-    dats <- load.fix(file.path(sim.dir, type), bd=tree)
     load(file=file.path(sim.dir, sprintf('%s.Rdata', type)))
     ## source('simulation/src/all/plotting.R')
 }
