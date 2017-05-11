@@ -1,17 +1,30 @@
 rm(list=ls())
-## change to your working directory
+## change to your working directory, i.e., whever the github
+## repository was cloned
 setwd('~/Dropbox/network_assembly')
+
 tree <- 'bd'
+
+## packages to install are listed in initialize.R. Install them before
+## running this line which opens all of the librarys required
 source('simulation/src/all/initialize.R')
+
+## set to the number of cores on which to run the simulation in
+## parallel
 
 options(mc.cores=1)
 prms <- base.prms()
-prms$sp <- 15
+
+## number of replicates of each parameter combination
 nreps <- 100
 
-BM <- c("BMLow", "BMHigher")
+## brownian moition sigma options
+BM <- c("BMLow", "BMHigh")
+
+## tree depth (extinction and speciation rates) options
 tree.depth <- c("Shallow", "Deep")
 
+## loop over the parameter combinations evaluated in the study
 for(i in BM){
     if(i == "BMLow"){
         prms$sigma <- 0.01
@@ -44,7 +57,7 @@ for(i in BM){
 }
 
 
-## plot all the different combinations
+## laod and make use-able for analysis all the different combinations
 combins <- c("BMLowDeep", "BMHighDeep", "BMLowShallow",
              "BMHighShallow")
 
@@ -52,5 +65,5 @@ for(i in 1:length(combins)){
     type <- combins[i]
     dats <- load.fix(file.path(sim.dir, type), bd=tree)
     load(file=file.path(sim.dir, sprintf('%s.Rdata', type)))
-    source('simulation/src/all/plotting.R')
+    ## source('simulation/src/all/plotting.R')
 }
