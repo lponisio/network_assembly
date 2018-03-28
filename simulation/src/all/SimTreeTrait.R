@@ -65,7 +65,6 @@ make.pa.mat <- function(prms, traits){
         cbind((trait - abs(trait*prms$range.size)),
         (trait + abs(trait*prms$range.size)))
     }
-    browser()
     ranges <- lapply(traits, calc.range)
     plants  <- ranges[[1]][prms$combinations[,1],]
     animals <- ranges[[2]][prms$combinations[,2],]
