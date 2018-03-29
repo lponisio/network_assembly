@@ -52,6 +52,9 @@ for(i in BM){
                  save.path=file.path(sim.dir, type),
                  mc.preschedule = FALSE)
         dats <- load.fix(file.path(sim.dir, type), bd=tree)
+        if( ! file.exists( sim.dir ) ) {
+            dir.create( sim.dir, recursive=TRUE )
+        }
         save(dats, file=file.path(sim.dir, sprintf('%s.Rdata', type)))
     }
 }

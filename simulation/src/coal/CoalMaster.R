@@ -11,5 +11,8 @@ run.sim <- function(prms, i, save.path) {
   }
   sim.links <- lapply(1:prms$ntree, f)
   res <- list(prms= prms, sim.links= sim.links)
+  if( ! file.exists( save.path ) ) {
+    dir.create( save.path, recursive=TRUE )
+  }
   save(res, file= file.path(save.path, sprintf('%d.RData', 22036+i)))
 }
