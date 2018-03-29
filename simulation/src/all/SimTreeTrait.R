@@ -120,11 +120,11 @@ interact.phylo.signal <- function(dist.tree, int.mat,
                 options(warn=-1)
                 cor.plant <- mantel(plant.dist,
                                     dist.tree2,
-                                    permutations=FALSE,
+                                    permutations=0,
                                     method=cor.method)$statistic
                 cor.pol <- mantel(pol.dist,
                                   dist.tree1,
-                                  permutations=FALSE,
+                                  permutations=0,
                                   method=cor.method)$statistic
                 ## subtrack 1 from dissimilarity to get simmilarity
                 return(c(cor.pol=cor.pol,

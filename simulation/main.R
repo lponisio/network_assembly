@@ -1,7 +1,7 @@
-rm(list=ls())
+#rm(list=ls())
 ## change to your working directory, i.e., whever the github
 ## repository was cloned
-setwd('~/Dropbox/network_assembly')
+setwd('~/pkg/network_assembly')
 
 tree <- 'bd'
 
@@ -52,6 +52,9 @@ for(i in BM){
                  save.path=file.path(sim.dir, type),
                  mc.preschedule = FALSE)
         dats <- load.fix(file.path(sim.dir, type), bd=tree)
+        if( ! file.exists( sim.dir ) ) {
+            dir.create( sim.dir, recursive=TRUE )
+        }
         save(dats, file=file.path(sim.dir, sprintf('%s.Rdata', type)))
     }
 }
