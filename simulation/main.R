@@ -1,7 +1,7 @@
-rm(list=ls())
+#rm(list=ls())
 ## change to your working directory, i.e., whever the github
 ## repository was cloned
-setwd('~/Dropbox/network_assembly')
+setwd('~/pkg/network_assembly')
 
 tree <- 'bd'
 
